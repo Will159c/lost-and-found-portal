@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import records from "./routes/record.js";
 import { getDb } from "./db/connection.js";
 
-dotenv.config({ path: "../../config.env" });
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5050;
