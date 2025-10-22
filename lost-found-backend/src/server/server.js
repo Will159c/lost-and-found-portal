@@ -18,7 +18,7 @@ app.use("/items", records); // e.g., /items routes
   try {
     await getDb();
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`Server running on Port: http://localhost:${PORT}`);
     });
   } catch (err) {
     console.error("Failed to start server:", err);
