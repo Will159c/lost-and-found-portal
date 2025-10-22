@@ -1,20 +1,22 @@
 // src/server/db/connection.js
-import { MongoClient } from "mongodb";
+import 'dotenv/config';
+import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI;
-if (!uri?.startsWith("mongodb")) {
-  throw new Error(
-    'MONGODB_URI must start with "mongodb://" or "mongodb+srv://"'
-  );
-}
-
-const client = new MongoClient(uri); // ← no deprecated options
 let dbInstance = null;
+let client = null;
 
 export async function getDb() {
   if (dbInstance) return dbInstance;
+
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  if (!uri || (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://'))) {
+    throw new Error('MONGODB_URI must start with "mongodb://" or "mongodb+srv://"');
+  }
+
+  client = new MongoClient(uri);
   await client.connect();
-  dbInstance = client.db(); // uses the DB in your URI if provided
-  console.log("MongoDB connected");
+  dbInstance = client.db(); 
+  console.log('MongoDB connected');
   return dbInstance;
 }
+
