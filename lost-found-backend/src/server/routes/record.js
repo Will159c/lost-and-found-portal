@@ -9,12 +9,16 @@ const router = express.Router();
 /**
  * Utility: coerce and whitelist incoming item fields.
  */
+const ALLOWED_STATUS = ["lost", "found", "claimed"];
+
 function buildItemFromBody(body) {
+  const status = (body.status || "lost").trim().toLowerCase();
+
   const item = {
     itemName: body.itemName?.trim(),
     description: body.description?.trim(),
     category: body.category?.trim(),
-    status: (body.status || "lost").trim(), // "lost" | "found" | "claimed"
+    status: ALLOWED_STATUS.includes(status) ? status : "lost", // "lost" | "found" | "claimed"
     location: body.location?.trim(),
     contactInfo: body.contactInfo?.trim(),
     imageURL: body.imageURL?.trim(),
@@ -68,6 +72,8 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error adding item");
+    console.error("VALIDATION DETAILS ->", err?.errInfo?.details);
+
   }
 });
 

@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import records from "./routes/record.js";
 import { getDb } from "./db/connection.js";
+import { ensureItemsCollection } from "./db/ensureItems.js";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use("/items", records); // e.g., /items routes
 (async () => {
   try {
     await getDb();
+    await ensureItemsCollection();
     app.listen(PORT, () => {
       console.log(`Server running on Port: http://localhost:${PORT}`);
     });
