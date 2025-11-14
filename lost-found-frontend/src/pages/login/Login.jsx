@@ -1,38 +1,30 @@
-import { useContext, useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../api/axios.js";
-import { AuthContext } from "../context/AuthContext.jsx";
+import api from "../../api/axios.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
 
-export default function Signup() {
+export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const onChange = (e) =>
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const { name, email, password } = form;
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      return setError("All fields are required.");
+    if (!email.trim() || !password.trim()) {
+      return setError("Please enter both email and password.");
     }
     try {
       setSubmitting(true);
-      const { data } = await api.post("/api/auth/register", form);
+      const { data } = await api.post("/api/auth/login", { email, password });
       login(data.token, data.user);
       navigate("/messages", { replace: true });
-    } catch (e2) {
-      const s = e2?.response?.status;
-      setError(
-        s === 409
-          ? "Email already registered. Please log in."
-          : e2?.response?.data?.message || "Signup failed."
-      );
+    } catch (err) {
+      setError(err?.response?.data?.message || "Login failed.");
     } finally {
       setSubmitting(false);
     }
@@ -58,30 +50,13 @@ export default function Signup() {
           boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
         }}
       >
-        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
-          Create an Account
-        </h2>
+        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Login</h2>
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
           <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={form.name}
-            onChange={onChange}
-            style={{
-              padding: "0.7rem",
-              borderRadius: "6px",
-              border: "1px solid #334155",
-              background: "#0f172a",
-              color: "#f8fafc",
-            }}
-          />
-          <input
             type="email"
-            name="email"
             placeholder="Email"
-            value={form.email}
-            onChange={onChange}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             style={{
               padding: "0.7rem",
               borderRadius: "6px",
@@ -92,10 +67,9 @@ export default function Signup() {
           />
           <input
             type="password"
-            name="password"
             placeholder="Password"
-            value={form.password}
-            onChange={onChange}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             style={{
               padding: "0.7rem",
               borderRadius: "6px",
@@ -117,7 +91,7 @@ export default function Signup() {
               cursor: "pointer",
             }}
           >
-            {submitting ? "Creating account…" : "Sign up"}
+            {submitting ? "Logging in..." : "Login"}
           </button>
         </form>
         {error && (
@@ -126,9 +100,9 @@ export default function Signup() {
           </p>
         )}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ color: "#60a5fa" }}>
-            Log in
+          Don’t have an account?{" "}
+          <Link to="/signup" style={{ color: "#60a5fa" }}>
+            Sign up
           </Link>
         </p>
       </div>

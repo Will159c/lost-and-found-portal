@@ -1,30 +1,38 @@
-import { useState, useContext } from "react";
+import { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../api/axios.js";
-import { AuthContext } from "../context/AuthContext.jsx";
+import api from "../../api/axios.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
 
-export default function Login() {
+export default function Signup() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const onChange = (e) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!email.trim() || !password.trim()) {
-      return setError("Please enter both email and password.");
+    const { name, email, password } = form;
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      return setError("All fields are required.");
     }
     try {
       setSubmitting(true);
-      const { data } = await api.post("/api/auth/login", { email, password });
+      const { data } = await api.post("/api/auth/register", form);
       login(data.token, data.user);
       navigate("/messages", { replace: true });
-    } catch (err) {
-      setError(err?.response?.data?.message || "Login failed.");
+    } catch (e2) {
+      const s = e2?.response?.status;
+      setError(
+        s === 409
+          ? "Email already registered. Please log in."
+          : e2?.response?.data?.message || "Signup failed."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -50,13 +58,30 @@ export default function Login() {
           boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
         }}
       >
-        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Login</h2>
+        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
+          Create an Account
+        </h2>
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
           <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={form.name}
+            onChange={onChange}
+            style={{
+              padding: "0.7rem",
+              borderRadius: "6px",
+              border: "1px solid #334155",
+              background: "#0f172a",
+              color: "#f8fafc",
+            }}
+          />
+          <input
             type="email"
+            name="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={form.email}
+            onChange={onChange}
             style={{
               padding: "0.7rem",
               borderRadius: "6px",
@@ -67,9 +92,10 @@ export default function Login() {
           />
           <input
             type="password"
+            name="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={form.password}
+            onChange={onChange}
             style={{
               padding: "0.7rem",
               borderRadius: "6px",
@@ -91,7 +117,7 @@ export default function Login() {
               cursor: "pointer",
             }}
           >
-            {submitting ? "Logging in..." : "Login"}
+            {submitting ? "Creating account…" : "Sign up"}
           </button>
         </form>
         {error && (
@@ -100,9 +126,9 @@ export default function Login() {
           </p>
         )}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          Don’t have an account?{" "}
-          <Link to="/signup" style={{ color: "#60a5fa" }}>
-            Sign up
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "#60a5fa" }}>
+            Log in
           </Link>
         </p>
       </div>

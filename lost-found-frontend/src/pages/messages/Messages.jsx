@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useContext } from "react";
-import api from "../api/axios";
-import { AuthContext } from "../context/AuthContext.jsx";
+import api from "../../api/axios";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 
 function whoIsOther(me, a, b) {

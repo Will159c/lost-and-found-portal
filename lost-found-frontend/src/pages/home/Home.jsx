@@ -105,7 +105,7 @@ export default function Home() {
     : styles.heroGrid;
 
   const featureTiles = [
-    { title: "Report a found item", desc: "Takes under a minute." },
+    { title: "Report and Drop off a found item", desc: "Takes under a minute." },
     { title: "Browse recent posts", desc: "Takes under a minute." },
     { title: "Message securely", desc: "Takes under a minute." },
   ];
