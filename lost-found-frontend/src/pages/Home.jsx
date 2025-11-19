@@ -1,170 +1,308 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Home() {
-  const [q, setQ] = useState("");
-  const nav = useNavigate();
+  const [q, setQ] = useState('')
+  const nav = useNavigate()
 
   const styles = {
     page: {
-      minHeight: "100vh",
-      padding: "24px 16px",
-      display: "flex",
-      justifyContent: "center",
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%)',
+      padding: 'clamp(20px, 4vw, 40px)',
+      paddingTop: '100px',
+      fontFamily: "'Georgia', 'Times New Roman', serif",
     },
-    container: { width: "100%", maxWidth: 1200 },
-
-    /* hero */
+    container: {
+      width: '100%',
+      maxWidth: '1100px',
+      margin: '0 auto',
+    },
+    header: {
+      textAlign: 'center',
+      marginBottom: 'clamp(32px, 5vw, 48px)',
+      paddingBottom: 'clamp(16px, 3vw, 24px)',
+      borderBottom: '3px solid #2c3e50',
+    },
+    universityName: {
+      fontSize: 'clamp(11px, 1.5vw, 14px)',
+      fontWeight: '600',
+      letterSpacing: '2px',
+      textTransform: 'uppercase',
+      color: '#7f8c8d',
+      marginBottom: '8px',
+      fontFamily: "'Helvetica Neue', sans-serif",
+    },
+    mainTitle: {
+      fontSize: 'clamp(28px, 5vw, 52px)',
+      fontWeight: '700',
+      color: '#2c3e50',
+      margin: '12px 0',
+      lineHeight: '1.2',
+    },
+    subtitle: {
+      fontSize: 'clamp(14px, 2vw, 18px)',
+      color: '#546e7a',
+      fontStyle: 'italic',
+      marginTop: '12px',
+      padding: '0 16px',
+    },
     hero: {
-      background: "#1e293b",
-      color: "white",
-      borderRadius: 12,
-      padding: 24,
-      boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+      background: 'white',
+      borderRadius: '8px',
+      padding: 'clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)',
+      marginBottom: 'clamp(24px, 4vw, 40px)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      border: '1px solid #e0e0e0',
     },
-    heroGrid: {
-      display: "grid",
-      gridTemplateColumns: "1.1fr .9fr",
-      gap: 20,
-      alignItems: "center",
+    sectionTitle: {
+      fontSize: 'clamp(20px, 3vw, 24px)',
+      fontWeight: '600',
+      color: '#2c3e50',
+      marginBottom: 'clamp(16px, 2.5vw, 20px)',
+      textAlign: 'center',
+      letterSpacing: '0.5px',
     },
-    h1: { fontSize: "clamp(28px,3.6vw,42px)", margin: "0 0 8px" },
-    lead: { color: "#cbd5e1", margin: "0 0 16px", fontSize: 18 },
-
-    searchRow: { display: "grid", gridTemplateColumns: "1fr 120px", gap: 12 },
+    searchContainer: {
+      maxWidth: '600px',
+      margin: '0 auto 32px',
+      width: '100%',
+    },
+    searchRow: {
+      display: 'flex',
+      gap: '12px',
+      marginBottom: '16px',
+      flexWrap: 'wrap',
+    },
     input: {
-      padding: "14px 14px",
-      borderRadius: 8,
-      border: "1px solid #334155",
-      background: "#0f172a",
-      color: "#f8fafc",
-      width: "100%",
-      outline: "none",
+      flex: '1',
+      minWidth: '200px',
+      padding: 'clamp(12px, 2vw, 14px) clamp(14px, 2.5vw, 18px)',
+      borderRadius: '4px',
+      border: '2px solid #bdc3c7',
+      background: '#ffffff',
+      color: '#2c3e50',
+      fontSize: 'clamp(14px, 2vw, 16px)',
+      fontFamily: "'Helvetica Neue', sans-serif",
+      transition: 'border-color 0.3s',
+      outline: 'none',
     },
     searchBtn: {
-      padding: "12px 16px",
-      borderRadius: 8,
-      border: "none",
-      background: "#0b1220",
-      color: "#fff",
-      fontWeight: 700,
-      cursor: "pointer",
+      padding: 'clamp(12px, 2vw, 14px) clamp(24px, 4vw, 32px)',
+      borderRadius: '4px',
+      border: 'none',
+      background: '#2c3e50',
+      color: '#fff',
+      fontWeight: '600',
+      cursor: 'pointer',
+      fontSize: 'clamp(14px, 2vw, 16px)',
+      fontFamily: "'Helvetica Neue', sans-serif",
+      transition: 'background 0.3s',
+      whiteSpace: 'nowrap',
     },
-
-    ctas: { display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap" },
+    buttonGroup: {
+      display: 'flex',
+      gap: '16px',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+    },
     btnPrimary: {
-      background: "#4f46e5",
-      border: "1px solid #6366f1",
-      color: "#fff",
-      textDecoration: "none",
-      padding: "10px 14px",
-      borderRadius: 10,
-      fontWeight: 600,
+      background: '#34495e',
+      border: '2px solid #2c3e50',
+      color: '#fff',
+      textDecoration: 'none',
+      padding: 'clamp(10px, 1.5vw, 12px) clamp(20px, 3vw, 28px)',
+      borderRadius: '4px',
+      fontWeight: '600',
+      fontSize: 'clamp(13px, 2vw, 15px)',
+      fontFamily: "'Helvetica Neue', sans-serif",
+      transition: 'all 0.3s',
+      display: 'inline-block',
     },
-    btnGhost: {
-      background: "transparent",
-      border: "1px solid #94a3b8",
-      color: "#e2e8f0",
-      textDecoration: "none",
-      padding: "10px 14px",
-      borderRadius: 10,
-      fontWeight: 600,
+    btnSecondary: {
+      background: 'transparent',
+      border: '2px solid #34495e',
+      color: '#34495e',
+      textDecoration: 'none',
+      padding: 'clamp(10px, 1.5vw, 12px) clamp(20px, 3vw, 28px)',
+      borderRadius: '4px',
+      fontWeight: '600',
+      fontSize: 'clamp(13px, 2vw, 15px)',
+      fontFamily: "'Helvetica Neue', sans-serif",
+      transition: 'all 0.3s',
+      display: 'inline-block',
     },
+    infoBox: {
+      background: '#fff3cd',
+      border: '1px solid #ffc107',
+      borderRadius: '6px',
+      padding: 'clamp(16px, 2.5vw, 20px)',
+      marginBottom: '24px',
+      textAlign: 'center',
+    },
+    infoText: {
+      fontSize: 'clamp(13px, 2vw, 15px)',
+      color: '#856404',
+      margin: 0,
+      fontFamily: "'Helvetica Neue', sans-serif",
+      lineHeight: '1.6',
+    },
+    featuresSection: {
+      marginTop: 'clamp(32px, 5vw, 48px)',
+    },
+    featuresGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+      gap: 'clamp(16px, 2.5vw, 24px)',
+      marginTop: 'clamp(24px, 4vw, 32px)',
+    },
+    featureCard: {
+      background: 'white',
+      borderRadius: '6px',
+      padding: 'clamp(24px, 4vw, 32px) clamp(20px, 3vw, 28px)',
+      border: '1px solid #e0e0e0',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+    },
+    featureNumber: {
+      fontSize: 'clamp(24px, 4vw, 32px)',
+      fontWeight: '700',
+      color: '#bdc3c7',
+      marginBottom: '12px',
+    },
+    featureTitle: {
+      fontSize: 'clamp(16px, 2.5vw, 20px)',
+      fontWeight: '600',
+      color: '#2c3e50',
+      marginBottom: '12px',
+      lineHeight: '1.3',
+    },
+    featureDesc: {
+      fontSize: 'clamp(13px, 2vw, 15px)',
+      color: '#7f8c8d',
+      lineHeight: '1.6',
+    },
+    policySection: {
+      background: '#ecf0f1',
+      borderRadius: '6px',
+      padding: 'clamp(24px, 4vw, 32px)',
+      marginTop: 'clamp(32px, 5vw, 48px)',
+      border: '1px solid #d5dbdb',
+    },
+    policyTitle: {
+      fontSize: 'clamp(16px, 2.5vw, 20px)',
+      fontWeight: '600',
+      color: '#2c3e50',
+      marginBottom: '16px',
+    },
+    policyText: {
+      fontSize: 'clamp(13px, 2vw, 15px)',
+      color: '#546e7a',
+      lineHeight: '1.7',
+      margin: 0,
+    },
+  }
 
-    policy: {
-      background: "#0f172a",
-      color: "white",
-      borderRadius: 12,
-      padding: 18,
-      boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
-    },
-    h2: { fontSize: 20, margin: "0 0 6px" },
-    body: { color: "#cbd5e1", margin: 0, lineHeight: 1.6 },
-
-    tiles: {
-      marginTop: 24,
-      display: "grid",
-      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-      gap: 16,
-    },
-    tile: {
-      background: "#0f172a",
-      color: "white",
-      borderRadius: 12,
-      padding: 18,
-      border: "1px solid #1f2937",
-      boxShadow: "0 10px 20px rgba(15,23,42,.15)",
-    },
-    tileTitle: { fontWeight: 800, margin: 0, color: "#e2e8f0", fontSize: 18 },
-    tileSub: { color: "#cbd5e1", marginTop: 6, fontSize: 14 },
-  };
-
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 900;
-  const heroGrid = isMobile
-    ? { ...styles.heroGrid, gridTemplateColumns: "1fr" }
-    : styles.heroGrid;
-
-  const featureTiles = [
-    { title: "Report a found item", desc: "Takes under a minute." },
-    { title: "Browse recent posts", desc: "Takes under a minute." },
-    { title: "Message securely", desc: "Takes under a minute." },
-  ];
+  const features = [
+    { number: '01', title: 'Browse Lost & Found Items', desc: 'Search through posted items by school staff. Find detailed descriptions and location information for lost belongings.' },
+    { number: '02', title: 'Contact Finder Directly', desc: 'Message users securely through our platform. Verify ownership and arrange safe meetups in public campus spaces.' },
+    { number: '03', title: 'Staff-Verified Posts Only', desc: 'All posts are submitted by authorized school staff, ensuring legitimacy and preventing fake or malicious listings.' },
+  ]
 
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        {/* HERO */}
-        <header style={styles.hero}>
-          <div style={heroGrid}>
-            <div>
-              <h1 style={styles.h1}>University Lost &amp; Found</h1>
-              <p style={styles.lead}>Search the directory or report a new item.</p>
-
-              <div style={styles.searchRow}>
-                <input
-                  placeholder="Search items (e.g., 'calculator')"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  style={styles.input}
-                />
-                <button
-                  style={styles.searchBtn}
-                  onClick={() => nav("/messages")}
-                >
-                  Search
-                </button>
-              </div>
-
-              <div style={styles.ctas}>
-                <Link to="/signup" style={styles.btnPrimary}>
-                  Create account
-                </Link>
-                <Link to="/login" style={styles.btnGhost}>
-                  Log in
-                </Link>
-              </div>
-            </div>
-
-            <aside style={styles.policy}>
-              <h2 style={styles.h2}>Policy</h2>
-              <p style={styles.body}>
-                Use university-appropriate language, meet in public campus spaces,
-                and follow Student Conduct guidelines. Questions? Contact Campus Life.
-              </p>
-            </aside>
-          </div>
+        <header style={styles.header}>
+          <div style={styles.universityName}>CSUN Campus Services</div>
+          <h1 style={styles.mainTitle}>University Lost & Found</h1>
+          <p style={styles.subtitle}>A centralized, staff-managed platform for the campus community</p>
         </header>
 
-        {/* FEATURE TILES */}
-        <section style={styles.tiles}>
-          {featureTiles.map((t) => (
-            <div key={t.title} style={styles.tile}>
-              <h4 style={styles.tileTitle}>{t.title}</h4>
-              <p style={styles.tileSub}>{t.desc}</p>
+        <section style={styles.hero}>
+          <h2 style={styles.sectionTitle}>Search Lost & Found Items</h2>
+          
+          <div style={styles.infoBox}>
+            <p style={styles.infoText}>
+              ℹ️ <strong>Note:</strong> Only authorized school staff can post items. Students can browse and message about found items.
+            </p>
+          </div>
+
+          <div style={styles.searchContainer}>
+            <div style={styles.searchRow}>
+              <input
+                placeholder="Search items (e.g., textbook, calculator, ID card)"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                style={styles.input}
+              />
+              <button
+                style={styles.searchBtn}
+                onClick={() => nav('/messages')}
+                onMouseOver={(e) => (e.target.style.background = '#1a252f')}
+                onMouseOut={(e) => (e.target.style.background = '#2c3e50')}
+              >
+                Search
+              </button>
             </div>
-          ))}
+
+            <div style={styles.buttonGroup}>
+              <Link 
+                to="/signup" 
+                style={styles.btnPrimary}
+                onMouseOver={(e) => (e.target.style.transform = 'translateY(-2px)')}
+                onMouseOut={(e) => (e.target.style.transform = 'translateY(0)')}
+              >
+                Create Account
+              </Link>
+              <Link 
+                to="/login" 
+                style={styles.btnSecondary}
+                onMouseOver={(e) => {
+                  e.target.style.background = '#34495e'
+                  e.target.style.color = '#fff'
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.background = 'transparent'
+                  e.target.style.color = '#34495e'
+                }}
+              >
+                Log In
+              </Link>
+            </div>
+          </div>
         </section>
+
+        <section style={styles.featuresSection}>
+          <h2 style={styles.sectionTitle}>How It Works</h2>
+          <div style={styles.featuresGrid}>
+            {features.map((f) => (
+              <div 
+                key={f.number} 
+                style={styles.featureCard}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'
+                }}
+              >
+                <div style={styles.featureNumber}>{f.number}</div>
+                <h4 style={styles.featureTitle}>{f.title}</h4>
+                <p style={styles.featureDesc}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <aside style={styles.policySection}>
+          <h3 style={styles.policyTitle}>Community Guidelines & Policy</h3>
+          <p style={styles.policyText}>
+            This platform is managed by CSUN Campus Services. Only authorized school staff members can post lost and found items to ensure authenticity and prevent fraudulent listings. All users must use university-appropriate language, meet in public campus spaces for item exchanges, and follow Student Conduct guidelines. For questions, contact Campus Life or University Police.
+          </p>
+        </aside>
       </div>
     </div>
-  );
+  )
 }
