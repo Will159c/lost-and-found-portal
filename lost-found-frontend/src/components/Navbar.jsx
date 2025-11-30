@@ -1,43 +1,75 @@
-import { Link } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { Link } from 'react-router-dom'
+import { useContext } from 'react'
+import { AuthContext } from '../context/AuthContext.jsx'
 
 export default function Navbar() {
-  const { user, logout } = useContext(AuthContext);
-
+  const { user, logout } = useContext(AuthContext)
+  
   return (
-    <nav style={{ background: "#1f2937", padding: "10px 20px", color: "#fff" }}>
-      <Link to="/" style={{ marginRight: 15, color: "white" }}>
-        Home
-      </Link>
-
+    <nav style={{
+      background: '#2c3e50',
+      padding: '16px 24px',
+      color: '#fff',
+      width: '100%',
+      boxSizing: 'border-box',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      margin: 0,
+    }}>
+      <Link to="/" style={{
+        color: 'white',
+        textDecoration: 'none',
+        fontWeight: '600',
+        fontSize: '15px',
+        fontFamily: "'Helvetica Neue', sans-serif",
+      }}>Home</Link>
+      
       {user ? (
         <>
-          <Link to="/messages" style={{ marginRight: 15, color: "white" }}>
-            Messages
-          </Link>
-          <button
-            onClick={logout}
-            style={{
-              background: "transparent",
-              border: "1px solid white",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Logout
-          </button>
+          <Link to="/messages" style={{
+            color: 'white',
+            textDecoration: 'none',
+            fontWeight: '600',
+            fontSize: '15px',
+            fontFamily: "'Helvetica Neue', sans-serif",
+          }}>Messages</Link>
+          <button onClick={logout} style={{
+            background: 'transparent',
+            border: '2px solid white',
+            color: 'white',
+            cursor: 'pointer',
+            padding: '6px 14px',
+            borderRadius: '4px',
+            fontWeight: '600',
+            fontSize: '14px',
+            fontFamily: "'Helvetica Neue', sans-serif",
+          }}>Logout</button>
         </>
       ) : (
         <>
-          <Link to="/login" style={{ marginRight: 15, color: "white" }}>
-            Login
-          </Link>
-          <Link to="/signup" style={{ color: "white" }}>
-            Signup
-          </Link>
+          <Link to="/login" style={{
+            color: 'white',
+            textDecoration: 'none',
+            fontWeight: '600',
+            fontSize: '15px',
+            fontFamily: "'Helvetica Neue', sans-serif",
+          }}>Login</Link>
+          <Link to="/signup" style={{
+            color: 'white',
+            textDecoration: 'none',
+            fontWeight: '600',
+            fontSize: '15px',
+            fontFamily: "'Helvetica Neue', sans-serif",
+          }}>Signup</Link>
         </>
       )}
     </nav>
-  );
+  )
 }
