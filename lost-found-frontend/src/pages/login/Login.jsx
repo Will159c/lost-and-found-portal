@@ -1,7 +1,8 @@
 import { useState, useContext } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from '../api/axios.js'
-import { AuthContext } from '../context/AuthContext.jsx'
+import api from "../../api/axios.js"; 
+import { AuthContext } from "../../context/AuthContext.jsx";
+
 
 export default function Login() {
   const { login } = useContext(AuthContext)

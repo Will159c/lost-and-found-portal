@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { sendMessage, getMessages } from "../api/messages";
+import { sendMessage, getMessages } from "../../api/messages.js";
+
 import styles from "./messages.module.css"; 
 
 export default function Messages() {
