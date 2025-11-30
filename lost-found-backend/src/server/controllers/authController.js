@@ -10,7 +10,7 @@ const saltRounds = 10;
 function buildUserFromBody(body) {
     const user = {
         email: body.email?.trim(),
-        password: body.password?.trim(),
+        password: body.password,
         firstName: body.firstName?.trim(),
         phoneNumber: body.phoneNumber?.trim()
     };
@@ -36,8 +36,9 @@ export async function register(req, res) {
                 .json({ message: "error: Email is already in use"})
         }
 
-        newUser.passwordHash = await bcrypt.hash(newUser.password, saltRounds);
+        const password = newUser.password;
         delete newUser.password;
+        newUser.password = await bcrypt.hash(password, saltRounds);
         
         
 
@@ -46,5 +47,41 @@ export async function register(req, res) {
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: "Error registering user." });
+    }
+}
+
+// Logins User
+export async function login(req, res) {
+    try {
+        if(!req.body.email || !req.body.password) {
+            return res
+                .status(400)
+                .json({ message: "Email and password required."})
+        }
+
+        const db = await getDb();
+        const collection = db.collection("users");
+        const user = await collection.findOne({ email: req.body.email });
+
+        if (!user) {
+            return res
+                .status(401)
+                .json({message: "Invalid credentials"})
+        } 
+
+        const isMatch = await bcrypt.compare(req.body.password, user.password);
+
+        if(!isMatch) {
+            return res
+                .status(401)
+                .json({message: "Invalid credentials"})
+        }
+
+        const payload = {userId: user._id, email: user.email, firstName: user.firstName, phoneNumber: user.phoneNumber}
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"})
+        return res.status(200).json({ token });
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ message: "Error logging in user."})
     }
 }

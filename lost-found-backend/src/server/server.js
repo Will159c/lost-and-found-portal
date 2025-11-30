@@ -2,13 +2,14 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import records from "./routes/record.js";
+import auth from "./routes/auth.js";
+
 import { getDb } from "./db/connection.js";
 import { ensureItemsCollection } from "./db/ensureItems.js";
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 
 dotenv.config();
-
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -16,6 +17,7 @@ const PORT = process.env.PORT || 5050;
 app.use(cors());
 app.use(express.json());
 app.use("/items", records); // e.g., /items routes
+app.use("/", auth); // auth routes
 
 //Swagger configuration
 const swaggerOptions = {
