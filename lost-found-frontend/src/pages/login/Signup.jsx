@@ -1,30 +1,49 @@
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from "../../api/axios.js";
-import { AuthContext } from "../../context/AuthContext.jsx";
-
 
 export default function Signup() {
-  const { login } = useContext(AuthContext)
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+
+  const [form, setForm] = useState({
+    firstName: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+  })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
+  const onChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    const { name, email, password } = form
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      return setError('All fields are required.')
+
+    const { firstName, email, phoneNumber, password } = form
+
+    if (!firstName.trim() || !email.trim() || !phoneNumber.trim() || !password.trim()) {
+      setError('All fields are required.')
+      return
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Invalid email.')
+      return
+    }
+
     try {
       setSubmitting(true)
-      const { data } = await api.post('/api/auth/register', form)
-      login(data.token, data.user)
-      navigate('/messages', { replace: true })
+      await api.post('/auth/register', {
+        email,
+        password,
+        firstName,
+        phoneNumber,
+      })
+
+      navigate('/login', { replace: true })
     } catch (e2) {
       const s = e2?.response?.status
       setError(
@@ -65,35 +84,41 @@ export default function Signup() {
         }}>
           <div style={{
             fontSize: 'clamp(11px, 1.5vw, 13px)',
-            fontWeight: '600',
+            fontWeight: 600,
             letterSpacing: '2px',
             textTransform: 'uppercase',
             color: '#7f8c8d',
             marginBottom: '8px',
             fontFamily: "'Helvetica Neue', sans-serif",
-          }}>CSUN CAMPUS SERVICES</div>
+          }}>
+            CSUN CAMPUS SERVICES
+          </div>
           <h2 style={{
             fontSize: 'clamp(24px, 4vw, 32px)',
-            fontWeight: '700',
+            fontWeight: 700,
             color: '#2c3e50',
             margin: '8px 0 0 0',
-          }}>Create Account</h2>
+          }}>
+            Create Account
+          </h2>
         </header>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'clamp(16px, 2.5vw, 20px)' }}>
           <div style={{ display: 'grid', gap: '6px' }}>
             <label style={{
               fontSize: 'clamp(13px, 2vw, 14px)',
-              fontWeight: '600',
+              fontWeight: 600,
               color: '#2c3e50',
               marginBottom: '6px',
               fontFamily: "'Helvetica Neue', sans-serif",
-            }}>Full Name</label>
+            }}>
+              First Name
+            </label>
             <input
               type="text"
-              name="name"
-              placeholder="John Doe"
-              value={form.name}
+              name="firstName"
+              placeholder="full name"
+              value={form.firstName}
               onChange={onChange}
               style={{
                 padding: 'clamp(12px, 2vw, 14px)',
@@ -116,11 +141,13 @@ export default function Signup() {
           <div style={{ display: 'grid', gap: '6px' }}>
             <label style={{
               fontSize: 'clamp(13px, 2vw, 14px)',
-              fontWeight: '600',
+              fontWeight: 600,
               color: '#2c3e50',
               marginBottom: '6px',
               fontFamily: "'Helvetica Neue', sans-serif",
-            }}>Email Address</label>
+            }}>
+              Email Address
+            </label>
             <input
               type="email"
               name="email"
@@ -148,11 +175,47 @@ export default function Signup() {
           <div style={{ display: 'grid', gap: '6px' }}>
             <label style={{
               fontSize: 'clamp(13px, 2vw, 14px)',
-              fontWeight: '600',
+              fontWeight: 600,
               color: '#2c3e50',
               marginBottom: '6px',
               fontFamily: "'Helvetica Neue', sans-serif",
-            }}>Password</label>
+            }}>
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="phoneNumber"
+              placeholder="6613859843"
+              value={form.phoneNumber}
+              onChange={onChange}
+              style={{
+                padding: 'clamp(12px, 2vw, 14px)',
+                borderRadius: '4px',
+                border: '2px solid #bdc3c7',
+                background: '#ffffff',
+                color: '#2c3e50',
+                fontSize: 'clamp(14px, 2vw, 16px)',
+                fontFamily: "'Helvetica Neue', sans-serif",
+                outline: 'none',
+                transition: 'border-color 0.3s',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+              onFocus={(e) => (e.target.style.borderColor = '#2c3e50')}
+              onBlur={(e) => (e.target.style.borderColor = '#bdc3c7')}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gap: '6px' }}>
+            <label style={{
+              fontSize: 'clamp(13px, 2vw, 14px)',
+              fontWeight: 600,
+              color: '#2c3e50',
+              marginBottom: '6px',
+              fontFamily: "'Helvetica Neue', sans-serif",
+            }}>
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -177,15 +240,19 @@ export default function Signup() {
             />
           </div>
 
-          {error && <div style={{
-            background: '#fee',
-            color: '#c33',
-            padding: '12px',
-            borderRadius: '4px',
-            fontSize: 'clamp(13px, 2vw, 14px)',
-            textAlign: 'center',
-            border: '1px solid #fcc',
-          }}>{error}</div>}
+          {error && (
+            <div style={{
+              background: '#fee',
+              color: '#c33',
+              padding: '12px',
+              borderRadius: '4px',
+              fontSize: 'clamp(13px, 2vw, 14px)',
+              textAlign: 'center',
+              border: '1px solid #fcc',
+            }}>
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -196,7 +263,7 @@ export default function Signup() {
               border: 'none',
               background: submitting ? '#7f8c8d' : '#2c3e50',
               color: '#fff',
-              fontWeight: '600',
+              fontWeight: 600,
               cursor: submitting ? 'not-allowed' : 'pointer',
               fontSize: 'clamp(14px, 2vw, 16px)',
               fontFamily: "'Helvetica Neue', sans-serif",
@@ -224,12 +291,12 @@ export default function Signup() {
             fontFamily: "'Helvetica Neue', sans-serif",
           }}>
             Already have an account?
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               style={{
                 color: '#34495e',
                 textDecoration: 'none',
-                fontWeight: '600',
+                fontWeight: 600,
                 marginLeft: '6px',
               }}
               onMouseOver={(e) => (e.target.style.textDecoration = 'underline')}

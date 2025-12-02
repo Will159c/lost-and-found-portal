@@ -1,7 +1,6 @@
-// This will help us connect to the database
 import { getDb } from "../db/connection.js";
-// This hash's passwords
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 // Defining saltRounds for hashing
 const saltRounds = 10;
@@ -53,10 +52,10 @@ export async function register(req, res) {
 // Logins User
 export async function login(req, res) {
     try {
-        if(!req.body.email || !req.body.password) {
+        if (!req.body.email || !req.body.password) {
             return res
                 .status(400)
-                .json({ message: "Email and password required."})
+                .json({ message: "Email and password required." });
         }
 
         const db = await getDb();
@@ -66,22 +65,40 @@ export async function login(req, res) {
         if (!user) {
             return res
                 .status(401)
-                .json({message: "Invalid credentials"})
-        } 
+                .json({ message: "Invalid credentials" });
+        }
 
         const isMatch = await bcrypt.compare(req.body.password, user.password);
 
-        if(!isMatch) {
+        if (!isMatch) {
             return res
                 .status(401)
-                .json({message: "Invalid credentials"})
+                .json({ message: "Invalid credentials" });
         }
 
-        const payload = {userId: user._id, email: user.email, firstName: user.firstName, phoneNumber: user.phoneNumber}
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"})
-        return res.status(200).json({ token });
-    } catch(err) {
+        const payload = {
+            userId: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            phoneNumber: user.phoneNumber
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        const safeUser = {
+            id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            phoneNumber: user.phoneNumber
+        };
+
+        return res.status(200).json({
+            token,
+            user: safeUser
+        });
+
+    } catch (err) {
         console.log(err);
-        res.status(500).json({ message: "Error logging in user."})
+        res.status(500).json({ message: "Error logging in user." });
     }
 }
