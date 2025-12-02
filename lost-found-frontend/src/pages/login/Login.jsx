@@ -1,30 +1,56 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from "../../api/axios.js"; 
-import { AuthContext } from "../../context/AuthContext.jsx";
-
+import api from "../../api/axios.js"
+import { AuthContext } from "../../context/AuthContext.jsx"
 
 export default function Login() {
   const { login } = useContext(AuthContext)
   const navigate = useNavigate()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  useEffect(() => {
+    if (!error) return
+    const timer = setTimeout(() => setError(''), 3000)
+    return () => clearTimeout(timer)
+  }, [error])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
     if (!email.trim() || !password.trim()) {
-      return setError('Please enter both email and password.')
+      setError("Please enter both email and password.")
+      return
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError("Invalid email.")
+      return
+    }
+
     try {
       setSubmitting(true)
-      const { data } = await api.post('/api/auth/login', { email, password })
+      const res = await api.post("/auth/login", { email, password })
+      const data = res.data
+
+      if (!data || !data.token) {
+        setError(data?.message || "Login failed.")
+        return
+      }
+
       login(data.token, data.user)
-      navigate('/messages', { replace: true })
+      navigate("/", { replace: true })
     } catch (err) {
-      setError(err?.response?.data?.message || 'Login failed.')
+      if (err?.response?.data?.message) {
+        setError(err.response.data.message)
+      } else {
+        setError("Login failed.")
+      }
     } finally {
       setSubmitting(false)
     }
@@ -39,7 +65,7 @@ export default function Login() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 20px',
-      fontFamily: "'Georgia', 'Times New Roman', serif",
+      fontFamily: "Georgia, 'Times New Roman', serif",
     }}>
       <div style={{
         background: 'white',
@@ -58,30 +84,40 @@ export default function Login() {
         }}>
           <div style={{
             fontSize: 'clamp(11px, 1.5vw, 13px)',
-            fontWeight: '600',
+            fontWeight: 600,
             letterSpacing: '2px',
             textTransform: 'uppercase',
             color: '#7f8c8d',
             marginBottom: '8px',
-            fontFamily: "'Helvetica Neue', sans-serif",
-          }}>CSUN CAMPUS SERVICES</div>
+            fontFamily: "Helvetica Neue, sans-serif",
+          }}>
+            CSUN CAMPUS SERVICES
+          </div>
           <h2 style={{
             fontSize: 'clamp(24px, 4vw, 32px)',
-            fontWeight: '700',
+            fontWeight: 700,
             color: '#2c3e50',
             margin: '8px 0 0 0',
-          }}>Account Login</h2>
+          }}>
+            Account Login
+          </h2>
         </header>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'clamp(16px, 2.5vw, 20px)' }}>
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          style={{ display: 'grid', gap: 'clamp(16px, 2.5vw, 20px)' }}
+        >
           <div style={{ display: 'grid', gap: '6px' }}>
             <label style={{
               fontSize: 'clamp(13px, 2vw, 14px)',
-              fontWeight: '600',
+              fontWeight: 600,
               color: '#2c3e50',
               marginBottom: '6px',
-              fontFamily: "'Helvetica Neue', sans-serif",
-            }}>Email Address</label>
+              fontFamily: "Helvetica Neue, sans-serif",
+            }}>
+              Email Address
+            </label>
             <input
               type="email"
               placeholder="your.email@csun.edu"
@@ -94,7 +130,7 @@ export default function Login() {
                 background: '#ffffff',
                 color: '#2c3e50',
                 fontSize: 'clamp(14px, 2vw, 16px)',
-                fontFamily: "'Helvetica Neue', sans-serif",
+                fontFamily: "Helvetica Neue, sans-serif",
                 outline: 'none',
                 transition: 'border-color 0.3s',
                 width: '100%',
@@ -108,11 +144,13 @@ export default function Login() {
           <div style={{ display: 'grid', gap: '6px' }}>
             <label style={{
               fontSize: 'clamp(13px, 2vw, 14px)',
-              fontWeight: '600',
+              fontWeight: 600,
               color: '#2c3e50',
               marginBottom: '6px',
-              fontFamily: "'Helvetica Neue', sans-serif",
-            }}>Password</label>
+              fontFamily: "Helvetica Neue, sans-serif",
+            }}>
+              Password
+            </label>
             <input
               type="password"
               placeholder="Enter your password"
@@ -125,7 +163,7 @@ export default function Login() {
                 background: '#ffffff',
                 color: '#2c3e50',
                 fontSize: 'clamp(14px, 2vw, 16px)',
-                fontFamily: "'Helvetica Neue', sans-serif",
+                fontFamily: "Helvetica Neue, sans-serif",
                 outline: 'none',
                 transition: 'border-color 0.3s',
                 width: '100%',
@@ -136,15 +174,19 @@ export default function Login() {
             />
           </div>
 
-          {error && <div style={{
-            background: '#fee',
-            color: '#c33',
-            padding: '12px',
-            borderRadius: '4px',
-            fontSize: 'clamp(13px, 2vw, 14px)',
-            textAlign: 'center',
-            border: '1px solid #fcc',
-          }}>{error}</div>}
+          {error && (
+            <div style={{
+              background: '#fee',
+              color: '#c33',
+              padding: '12px',
+              borderRadius: '4px',
+              fontSize: 'clamp(13px, 2vw, 14px)',
+              textAlign: 'center',
+              border: '1px solid #fcc',
+            }}>
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -155,10 +197,10 @@ export default function Login() {
               border: 'none',
               background: submitting ? '#7f8c8d' : '#2c3e50',
               color: '#fff',
-              fontWeight: '600',
+              fontWeight: 600,
               cursor: submitting ? 'not-allowed' : 'pointer',
               fontSize: 'clamp(14px, 2vw, 16px)',
-              fontFamily: "'Helvetica Neue', sans-serif",
+              fontFamily: "Helvetica Neue, sans-serif",
               transition: 'background 0.3s',
               marginTop: '8px',
               width: '100%',
@@ -183,7 +225,7 @@ export default function Login() {
               color: '#304ffe',
               fontWeight: 600,
               textDecoration: 'none',
-              fontFamily: "'Helvetica Neue', sans-serif",
+              fontFamily: "Helvetica Neue, sans-serif",
               fontSize: 'clamp(13px, 2vw, 14px)',
             }}
             onMouseOver={e => (e.target.style.textDecoration = 'underline')}
@@ -197,7 +239,7 @@ export default function Login() {
               color: '#304ffe',
               fontWeight: 600,
               textDecoration: 'none',
-              fontFamily: "'Helvetica Neue', sans-serif",
+              fontFamily: "Helvetica Neue, sans-serif",
               fontSize: 'clamp(13px, 2vw, 14px)',
             }}
             onMouseOver={e => (e.target.style.textDecoration = 'underline')}
@@ -217,7 +259,7 @@ export default function Login() {
             fontSize: 'clamp(13px, 2vw, 14px)',
             color: '#546e7a',
             margin: 0,
-            fontFamily: "'Helvetica Neue', sans-serif",
+            fontFamily: "Helvetica Neue, sans-serif",
           }}>
             Don't have an account?
             <Link
@@ -225,7 +267,7 @@ export default function Login() {
               style={{
                 color: '#34495e',
                 textDecoration: 'none',
-                fontWeight: '600',
+                fontWeight: 600,
                 marginLeft: '6px',
               }}
               onMouseOver={e => (e.target.style.textDecoration = 'underline')}

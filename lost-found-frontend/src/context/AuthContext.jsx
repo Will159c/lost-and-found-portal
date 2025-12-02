@@ -1,5 +1,4 @@
 import { createContext, useEffect, useMemo, useState } from "react";
-import api from "../api/axios.js";
 
 export const AuthContext = createContext({
   user: null,
@@ -11,30 +10,24 @@ export const AuthContext = createContext({
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
+
   const [user, setUser] = useState(() => {
     const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      console.error("Invalid user JSON in localStorage, clearing it:", raw);
+      localStorage.removeItem("user");
+      return null;
+    }
   });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const hydrate = async () => {
-      if (!token) { setLoading(false); return; }
-      try {
-        const { data } = await api.get("/api/auth/me");
-        setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
-      } catch {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setToken(null);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    hydrate();
-  }, [token]);
+    setLoading(false);
+  }, []);
 
   const login = (newToken, newUser) => {
     localStorage.setItem("token", newToken);
@@ -50,6 +43,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const value = useMemo(() => ({ user, token, loading, login, logout }), [user, token, loading]);
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const value = useMemo(
+    () => ({ user, token, loading, login, logout }),
+    [user, token, loading]
+  );
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
