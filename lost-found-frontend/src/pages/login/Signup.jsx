@@ -10,6 +10,7 @@ export default function Signup() {
     email: '',
     phoneNumber: '',
     password: '',
+    confirmPassword: '',
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -21,9 +22,9 @@ export default function Signup() {
     e.preventDefault()
     setError('')
 
-    const { firstName, email, phoneNumber, password } = form
+    const { firstName, email, phoneNumber, password, confirmPassword } = form
 
-    if (!firstName.trim() || !email.trim() || !phoneNumber.trim() || !password.trim()) {
+    if (!firstName.trim() || !email.trim() || !phoneNumber.trim() || !password.trim() || !confirmPassword.trim()) {
       setError('All fields are required.')
       return
     }
@@ -31,6 +32,11 @@ export default function Signup() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setError('Invalid email.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
       return
     }
 
@@ -221,6 +227,39 @@ export default function Signup() {
               name="password"
               placeholder="Create a password"
               value={form.password}
+              onChange={onChange}
+              style={{
+                padding: 'clamp(12px, 2vw, 14px)',
+                borderRadius: '4px',
+                border: '2px solid #bdc3c7',
+                background: '#ffffff',
+                color: '#2c3e50',
+                fontSize: 'clamp(14px, 2vw, 16px)',
+                fontFamily: "'Helvetica Neue', sans-serif",
+                outline: 'none',
+                transition: 'border-color 0.3s',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+              onFocus={(e) => (e.target.style.borderColor = '#2c3e50')}
+              onBlur={(e) => (e.target.style.borderColor = '#bdc3c7')}
+            />
+          </div>
+          <div style={{ display: 'grid', gap: '6px' }}>
+            <label style={{
+              fontSize: 'clamp(13px, 2vw, 14px)',
+              fontWeight: 600,
+              color: '#2c3e50',
+              marginBottom: '6px',
+              fontFamily: "'Helvetica Neue', sans-serif",
+            }}>
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm your password"
+              value={form.confirmPassword}
               onChange={onChange}
               style={{
                 padding: 'clamp(12px, 2vw, 14px)',

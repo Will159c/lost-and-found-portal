@@ -58,6 +58,20 @@ export default function Navbar() {
           >
             Messages
           </Link>
+          {user?.isAdmin && (
+            <Link
+              to="/admin"
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '600',
+                fontSize: '15px',
+                fontFamily: "'Helvetica Neue', sans-serif",
+              }}
+            >
+              Admin Dashboard
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             style={{
