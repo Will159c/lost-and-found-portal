@@ -3,7 +3,7 @@ import { getDb } from "./connection.js";
 const validator = {
     $jsonSchema: {
         bsonType: "object",
-        required: ["itemName", "description", "status", "contactInfo", "location", "date"],
+        required: ["itemName", "description", "status", "contactInfo", "location", "date", "organization"],
         additionalProperties: false,
         properties: {
             _id: {},
@@ -16,6 +16,7 @@ const validator = {
 
             category: { bsonType: "string" },
             imageURL: { bsonType: ["string", "null"] }, 
+            organization: { bsonType: "string" },
 
         }
     }

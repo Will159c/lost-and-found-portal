@@ -12,7 +12,7 @@ const router = express.Router();
  */
 const ALLOWED_STATUS = ["lost", "found", "claimed"];
 
-function buildItemFromBody(body) {
+function buildItemFromBody(body, org) {
   const status = (body.status || "lost").trim().toLowerCase();
 
   const item = {
@@ -23,6 +23,7 @@ function buildItemFromBody(body) {
     location: body.location?.trim(),
     contactInfo: body.contactInfo?.trim(),
     imageURL: body.imageURL?.trim(),
+    organization: org,
   };
 
   const d = body.date ? new Date(body.date) : new Date();
@@ -36,10 +37,13 @@ router.get("/", async (req, res) => {
   try {
     const db = await getDb();
     const collection = db.collection("items");
-    const results = await collection.find({}).sort({ date: -1 }).toArray();
+    const query = {};
+    if (req.query.organization && req.query.organization !== "all") {
+      query.organization = req.query.organization;
+    }
+    const results = await collection.find(query).sort({ date: -1 }).toArray();
     res.status(200).send(results);
   } catch (err) {
-    console.error(err);
     res.status(500).send("Error fetching items");
   }
 });
@@ -62,7 +66,7 @@ router.get("/:id", async (req, res) => {
 /* POST create item */
 router.post("/", requireAuth, requireAdmin, async (req, res) => {
   try {
-    const newItem = buildItemFromBody(req.body);
+    const newItem = buildItemFromBody(req.body, req.user.organization);
 
     if (!newItem.itemName || !newItem.description || !newItem.status) {
       return res
@@ -88,7 +92,7 @@ router.put("/:id", async (req, res) => {
     const db = await getDb();
     const collection = db.collection("items");
     const query = { _id: new ObjectId(req.params.id) };
-    const updates = buildItemFromBody(req.body);
+    const updates = buildItemFromBody(req.body, req.user.organization);
     const result = await collection.updateOne(query, { $set: updates });
     if (result.matchedCount === 0)
       return res.status(404).send("Item not found");

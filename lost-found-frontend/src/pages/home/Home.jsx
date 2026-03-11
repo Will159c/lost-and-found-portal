@@ -5,6 +5,7 @@ import api from '../../api/axios.js'
 
 export default function Home() {
   const [q, setQ] = useState('')
+  const [selectedOrg, setSelectedOrg] = useState('') 
   const [items, setItems] = useState([])
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -74,7 +75,7 @@ export default function Home() {
       letterSpacing: '0.5px',
     },
     searchContainer: {
-      maxWidth: '600px',
+      maxWidth: '800px', 
       margin: '0 auto 24px',
       width: '100%',
     },
@@ -85,7 +86,7 @@ export default function Home() {
       flexWrap: 'wrap',
     },
     input: {
-      flex: 1,
+      flex: 2,
       minWidth: '200px',
       padding: 'clamp(12px, 2vw, 14px) clamp(14px, 2.5vw, 18px)',
       borderRadius: '4px',
@@ -95,6 +96,19 @@ export default function Home() {
       fontSize: 'clamp(14px, 2vw, 16px)',
       fontFamily: "'Helvetica Neue', sans-serif",
       transition: 'border-color 0.3s',
+      outline: 'none',
+    },
+    selectDropdown: {
+      flex: 1,
+      minWidth: '160px',
+      padding: 'clamp(12px, 2vw, 14px)',
+      borderRadius: '4px',
+      border: '2px solid #bdc3c7',
+      background: '#ffffff',
+      color: '#2c3e50',
+      fontSize: 'clamp(14px, 2vw, 16px)',
+      fontFamily: "'Helvetica Neue', sans-serif",
+      cursor: 'pointer',
       outline: 'none',
     },
     searchBtn: {
@@ -191,6 +205,15 @@ export default function Home() {
       fontWeight: 600,
       color: '#2c3e50',
     },
+    orgBadge: {
+      fontSize: '10px',
+      background: '#2c3e50',
+      color: 'white',
+      padding: '2px 8px',
+      borderRadius: '12px',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+    },
     resultDesc: {
       fontSize: '13px',
       color: '#7f8c8d',
@@ -278,22 +301,30 @@ export default function Home() {
     {
       number: '01',
       title: 'Browse Lost & Found Items',
-      desc: 'Search through posted items by school staff. Find detailed descriptions and location information for lost belongings.',
+      desc: 'Search through posted items by staff. Find detailed descriptions and location information for lost belongings.',
     },
     {
       number: '02',
       title: 'Contact Finder Directly',
-      desc: 'Message users securely through our platform. Verify ownership and arrange safe meetups in public campus spaces.',
+      desc: 'Contact users securely through posted contact information. Verify ownership and arrange safe meetups in public spaces.',
     },
     {
       number: '03',
       title: 'Staff-Verified Posts Only',
-      desc: 'All posts are submitted by authorized school staff, ensuring legitimacy and preventing fake or malicious listings.',
+      desc: 'All posts are submitted by authorized taff, ensuring legitimacy and preventing fake or malicious listings.',
     },
   ]
 
   const handleSearch = async () => {
     const query = q.trim()
+    
+    if (!selectedOrg) {
+      setError('Please select an organization (e.g. CSUN) to search their records.')
+      setHasSearched(false)
+      setResults([])
+      return
+    }
+
     if (!query) {
       setError('Please enter a description to search.')
       setHasSearched(false)
@@ -306,14 +337,9 @@ export default function Home() {
     setHasSearched(true)
 
     try {
-      // only fetch once; reuse if already fetched
-      let allItems = items
-      if (items.length === 0) {
-        const res = await api.get('/api/items')
-        allItems = res.data || []
-        setItems(allItems)
-      }
-
+      const res = await api.get(`/api/items?organization=${selectedOrg}`)
+      const allItems = res.data || []
+      
       const lower = query.toLowerCase()
       const matched = allItems.filter((item) => {
         const haystack =
@@ -340,10 +366,10 @@ export default function Home() {
     <div style={styles.page}>
       <div style={styles.container}>
         <header style={styles.header}>
-          <div style={styles.universityName}>CSUN Campus Services</div>
-          <h1 style={styles.mainTitle}>University Lost & Found</h1>
+          <div style={styles.universityName}>Services Network</div>
+          <h1 style={styles.mainTitle}>Lost & Found</h1>
           <p style={styles.subtitle}>
-            A centralized, staff-managed platform for the campus community
+            A centralized, staff-managed platform for campuses/businesses
           </p>
         </header>
 
@@ -352,8 +378,7 @@ export default function Home() {
 
           <div style={styles.infoBox}>
             <p style={styles.infoText}>
-              ℹ️ <strong>Note:</strong> Only authorized school staff can post items. Students can
-              browse and message about found items.
+              ℹ️ <strong>Note:</strong> Only authorized staff can post items.
             </p>
           </div>
 
@@ -361,8 +386,19 @@ export default function Home() {
             {error && <div style={styles.errorBox}>{error}</div>}
 
             <div style={styles.searchRow}>
+              {/* ORGANIZATION DROPDOWN */}
+              <select 
+                style={styles.selectDropdown}
+                value={selectedOrg}
+                onChange={(e) => setSelectedOrg(e.target.value)}
+              >
+                <option value="">-- Select Business --</option>
+                <option value="csun">CSUN</option>
+                <option value="starbucks">Starbucks</option>
+              </select>
+
               <input
-                placeholder="Describe what was lost (e.g., silver MacBook with stickers)"
+                placeholder="Describe what was lost (e.g., silver MacBook)"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 style={styles.input}
@@ -382,18 +418,22 @@ export default function Home() {
               {loading && <div style={styles.resultsHeader}>Searching…</div>}
 
               {!loading && hasSearched && results.length === 0 && !error && (
-                <div style={styles.resultsHeader}>No matching items found.</div>
+                <div style={styles.resultsHeader}>No matching items found for {selectedOrg.toUpperCase()}.</div>
               )}
 
               {!loading && results.length > 0 && (
                 <>
                   <div style={styles.resultsHeader}>
-                    Showing {results.length} matching item{results.length !== 1 ? 's' : ''}.
+                    Showing {results.length} matching item{results.length !== 1 ? 's' : ''} from {selectedOrg.toUpperCase()}.
                   </div>
                   <div style={styles.resultsGrid}>
                     {results.map((item) => (
                       <div key={item._id} style={styles.resultCard}>
-                        <div style={styles.resultTitle}>{item.itemName}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={styles.resultTitle}>{item.itemName}</div>
+                          <span style={styles.orgBadge}>{item.organization}</span>
+                        </div>
+                        
                         {item.description && (
                           <div style={styles.resultDesc}>{item.description}</div>
                         )}
@@ -499,11 +539,10 @@ export default function Home() {
         <aside style={styles.policySection}>
           <h3 style={styles.policyTitle}>Community Guidelines & Policy</h3>
           <p style={styles.policyText}>
-            This platform is managed by CSUN Campus Services. Only authorized school staff members
+            Only authorized staff members
             can post lost and found items to ensure authenticity and prevent fraudulent listings.
-            All users must use university-appropriate language, meet in public campus spaces for
-            item exchanges, and follow Student Conduct guidelines. For questions, contact Campus
-            Life or University Police.
+            All users must use ppropriate language and meet in public campus spaces for
+            item exchanges.
           </p>
         </aside>
       </div>

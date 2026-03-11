@@ -20,7 +20,7 @@ export function requireAuth(req, res, next) {
 }
 
 export function requireAdmin(req, res, next) {
-  if (!req.user || req.user.isAdmin !== true) {
+  if (!req.user || req.user.isAdmin !== true || req.user.organization === "null") {
     return res.status(403).json({ message: "Access denied: Admins only" });
   }
   next();

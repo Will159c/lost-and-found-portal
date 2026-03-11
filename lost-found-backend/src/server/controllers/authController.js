@@ -12,7 +12,8 @@ function buildUserFromBody(body) {
         password: body.password,
         firstName: body.firstName?.trim(),
         phoneNumber: body.phoneNumber?.trim(),
-        isAdmin: false
+        isAdmin: false,
+        organization: "null",
     };
 
     return user;
@@ -82,7 +83,8 @@ export async function login(req, res) {
             email: user.email,
             firstName: user.firstName,
             phoneNumber: user.phoneNumber,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            organization: user.organization,
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
@@ -92,7 +94,8 @@ export async function login(req, res) {
             email: user.email,
             firstName: user.firstName,
             phoneNumber: user.phoneNumber,
-            isAdmin: user.isAdmin
+            isAdmin: user.isAdmin,
+            organization: user.organization,
         };
 
         return res.status(200).json({
