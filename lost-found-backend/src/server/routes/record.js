@@ -3,6 +3,7 @@ import express from "express";
 import { getDb } from "../db/connection.js";
 // This helps convert the id from string to ObjectId for the _id.
 import { ObjectId } from "mongodb";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -23,8 +24,10 @@ function buildItemFromBody(body) {
     contactInfo: body.contactInfo?.trim(),
     imageURL: body.imageURL?.trim(),
   };
+
   const d = body.date ? new Date(body.date) : new Date();
   item.date = isNaN(d.getTime()) ? new Date() : d;
+
   return item;
 }
 
@@ -57,23 +60,25 @@ router.get("/:id", async (req, res) => {
 });
 
 /* POST create item */
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, requireAdmin, async (req, res) => {
   try {
     const newItem = buildItemFromBody(req.body);
+
     if (!newItem.itemName || !newItem.description || !newItem.status) {
       return res
         .status(400)
         .send("itemName, description, and status are required");
     }
+
     const db = await getDb();
     const collection = db.collection("items");
     const result = await collection.insertOne(newItem);
+
     res.status(201).send(result);
   } catch (err) {
     console.error(err);
     res.status(500).send("Error adding item");
     console.error("VALIDATION DETAILS ->", err?.errInfo?.details);
-
   }
 });
 
