@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Home from "./pages/home/Home.jsx";
 import Login from "./pages/login/Login.jsx";
 import Signup from "./pages/login/Signup.jsx";
+import ResetPassword from "./pages/login/ResetPassword.jsx";
 import Messages from "./pages/messages/Messages.jsx";
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ForgotUsername from './pages/ForgotUsername.jsx';
@@ -34,6 +35,7 @@ export default function App() {
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/forgot-username" element={<ForgotUsername />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
