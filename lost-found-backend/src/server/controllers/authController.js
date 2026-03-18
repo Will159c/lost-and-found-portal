@@ -13,7 +13,7 @@ function buildUserFromBody(body) {
         firstName: body.firstName?.trim(),
         phoneNumber: body.phoneNumber?.trim(),
         isAdmin: false,
-        organization: "null",
+        organization: null, // FIXED: Changed from the string "null" to the primitive null
     };
 
     return user;

@@ -87,7 +87,8 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
 });
 
 /* PUT update item */
-router.put("/:id", async (req, res) => {
+// ADDED MIDDLEWARE HERE
+router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const collection = db.collection("items");
@@ -107,7 +108,8 @@ router.put("/:id", async (req, res) => {
 });
 
 /* DELETE item */
-router.delete("/:id", async (req, res) => {
+// ADDED MIDDLEWARE HERE
+router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const collection = db.collection("items");

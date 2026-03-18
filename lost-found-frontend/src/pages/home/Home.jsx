@@ -387,7 +387,7 @@ export default function Home() {
 
             <div style={styles.searchRow}>
               {/* ORGANIZATION DROPDOWN */}
-              <select 
+              <select
                 style={styles.selectDropdown}
                 value={selectedOrg}
                 onChange={(e) => setSelectedOrg(e.target.value)}
@@ -406,8 +406,8 @@ export default function Home() {
               <button
                 style={styles.searchBtn}
                 onClick={handleSearch}
-                onMouseOver={(e) => (e.target.style.background = '#1a252f')}
-                onMouseOut={(e) => (e.target.style.background = '#2c3e50')}
+                onMouseOver={(e) => (e.target.style.background = "#1a252f")}
+                onMouseOut={(e) => (e.target.style.background = "#2c3e50")}
               >
                 Search
               </button>
@@ -418,24 +418,38 @@ export default function Home() {
               {loading && <div style={styles.resultsHeader}>Searching…</div>}
 
               {!loading && hasSearched && results.length === 0 && !error && (
-                <div style={styles.resultsHeader}>No matching items found for {selectedOrg.toUpperCase()}.</div>
+                <div style={styles.resultsHeader}>
+                  No matching items found for {selectedOrg.toUpperCase()}.
+                </div>
               )}
 
               {!loading && results.length > 0 && (
                 <>
                   <div style={styles.resultsHeader}>
-                    Showing {results.length} matching item{results.length !== 1 ? 's' : ''} from {selectedOrg.toUpperCase()}.
+                    Showing {results.length} matching item
+                    {results.length !== 1 ? "s" : ""} from{" "}
+                    {selectedOrg.toUpperCase()}.
                   </div>
                   <div style={styles.resultsGrid}>
                     {results.map((item) => (
                       <div key={item._id} style={styles.resultCard}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
                           <div style={styles.resultTitle}>{item.itemName}</div>
-                          <span style={styles.orgBadge}>{item.organization}</span>
+                          <span style={styles.orgBadge}>
+                            {item.organization}
+                          </span>
                         </div>
-                        
+
                         {item.description && (
-                          <div style={styles.resultDesc}>{item.description}</div>
+                          <div style={styles.resultDesc}>
+                            {item.description}
+                          </div>
                         )}
                         <div style={styles.resultMetaRow}>
                           {item.category && (
@@ -453,14 +467,22 @@ export default function Home() {
                               <strong>Status:</strong> {item.status}
                             </span>
                           )}
+                          {/* ADDED CONTACT INFO HERE */}
+                          {item.contactInfo && (
+                            <span style={{ color: "#d35400" }}>
+                              <strong>Contact:</strong> {item.contactInfo}
+                            </span>
+                          )}
                         </div>
+
+                        
                         {item.date && (
                           <div style={styles.resultDate}>
-                            Posted:{' '}
+                            Posted:{" "}
                             {new Date(item.date).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
                             })}
                           </div>
                         )}
@@ -478,8 +500,12 @@ export default function Home() {
                   <Link
                     to="/signup"
                     style={styles.btnPrimary}
-                    onMouseOver={(e) => (e.target.style.transform = 'translateY(-2px)')}
-                    onMouseOut={(e) => (e.target.style.transform = 'translateY(0)')}
+                    onMouseOver={(e) =>
+                      (e.target.style.transform = "translateY(-2px)")
+                    }
+                    onMouseOut={(e) =>
+                      (e.target.style.transform = "translateY(0)")
+                    }
                   >
                     Create Account
                   </Link>
@@ -487,12 +513,12 @@ export default function Home() {
                     to="/login"
                     style={styles.btnSecondary}
                     onMouseOver={(e) => {
-                      e.target.style.background = '#34495e'
-                      e.target.style.color = '#fff'
+                      e.target.style.background = "#34495e";
+                      e.target.style.color = "#fff";
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.background = 'transparent'
-                      e.target.style.color = '#34495e'
+                      e.target.style.background = "transparent";
+                      e.target.style.color = "#34495e";
                     }}
                   >
                     Log In
@@ -501,9 +527,13 @@ export default function Home() {
               ) : (
                 <button
                   style={styles.btnPrimary}
-                  onClick={() => nav('/messages')}
-                  onMouseOver={(e) => (e.target.style.transform = 'translateY(-2px)')}
-                  onMouseOut={(e) => (e.target.style.transform = 'translateY(0)')}
+                  onClick={() => nav("/messages")}
+                  onMouseOver={(e) =>
+                    (e.target.style.transform = "translateY(-2px)")
+                  }
+                  onMouseOut={(e) =>
+                    (e.target.style.transform = "translateY(0)")
+                  }
                 >
                   Go to Messages
                 </button>
@@ -520,12 +550,14 @@ export default function Home() {
                 key={f.number}
                 style={styles.featureCard}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0,0,0,0.12)";
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 4px rgba(0,0,0,0.06)";
                 }}
               >
                 <div style={styles.featureNumber}>{f.number}</div>
@@ -539,13 +571,13 @@ export default function Home() {
         <aside style={styles.policySection}>
           <h3 style={styles.policyTitle}>Community Guidelines & Policy</h3>
           <p style={styles.policyText}>
-            Only authorized staff members
-            can post lost and found items to ensure authenticity and prevent fraudulent listings.
-            All users must use ppropriate language and meet in public campus spaces for
-            item exchanges.
+            Only authorized staff members can post lost and found items to
+            ensure authenticity and prevent fraudulent listings. All users must
+            use ppropriate language and meet in public campus spaces for item
+            exchanges.
           </p>
         </aside>
       </div>
     </div>
-  )
+  );
 }
