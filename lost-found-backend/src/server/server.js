@@ -2,6 +2,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import http from "http";
+import { Server } from "socket.io";
 
 import records from "./routes/record.js";
 import auth from "./routes/auth.js";
@@ -22,9 +24,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/items", records);      // items routes
-app.use("/auth", auth);              // auth routes 
-app.use("/api/messages", messages);  // messages routes
+app.use("/api/items", records);
+app.use("/auth", auth);
+app.use("/api/messages", messages);
 
 // Swagger configuration
 const swaggerOptions = {
@@ -47,16 +49,41 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Create HTTP server for Express + Socket.IO
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
+
+// store io globally
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join", (email) => {
+    if (!email) return;
+    socket.join(email);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
 // Start only after DB is connected
 (async () => {
   try {
     await getDb();
     await ensureItemsCollection();
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on Port: http://localhost:${PORT}`);
     });
   } catch (err) {
     console.error("Failed to start server:", err);
   }
 })();
-

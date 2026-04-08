@@ -1,34 +1,105 @@
 .outerWrap {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: #f5f7fa;
+  padding: 110px 20px 30px;
 }
 
 .layout {
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   border-radius: 14px;
-  max-width: 700px;
+  max-width: 980px;
   width: 100%;
   border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.adminLayout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 620px;
+}
+
+.sidebar {
+  border-right: 1px solid #e5e7eb;
+  background: #fbfcfe;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebarHeader {
+  padding: 20px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #2c3e50;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebarEmpty {
+  padding: 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.contactBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #eef2f7;
+  background: transparent;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.contactBtn:hover {
+  background: #f3f7ff;
+}
+
+.contactBtnActive {
+  background: #e9efff;
+}
+
+.contactInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contactName {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.contactEmail {
+  font-size: 13px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .chatHeader {
   border-bottom: 1px solid #e5e7eb;
-  padding: 20px 28px 6px 28px;
+  padding: 20px 28px 10px 28px;
 }
 
 .chatTitle {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: Georgia, "Times New Roman", serif;
   font-weight: 700;
   font-size: 21px;
   color: #2c3e50;
@@ -44,8 +115,8 @@
 
 .scroll {
   padding: 24px;
-  min-height: 200px;
-  max-height: 320px;
+  min-height: 340px;
+  max-height: 420px;
   overflow-y: auto;
   background: #fff;
   display: flex;
@@ -70,17 +141,29 @@
 }
 
 .composeBar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 18px 28px;
+  padding: 18px 20px;
   background: #fafafa;
   border-top: 1px solid #e5e7eb;
 }
 
+.composeGrid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) auto minmax(200px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.composeGridAdmin {
+  display: grid;
+  grid-template-columns: auto minmax(240px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
 .input {
-  flex: 1;
-  padding: 12px 12px;
+  min-width: 0;
+  width: 100%;
+  padding: 12px;
   border-radius: 8px;
   border: 1.5px solid #e5e7eb;
   background: #fff;
@@ -98,13 +181,14 @@
   background: #304ffe;
   color: #fff;
   border: 0;
-  padding: 10px 24px;
+  padding: 12px 22px;
   border-radius: 8px;
   cursor: pointer;
   font-family: "Helvetica Neue", Arial, sans-serif;
   font-weight: 600;
   font-size: 15px;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
 .sendBtn:disabled {
@@ -116,14 +200,43 @@
   background: #2036c6;
 }
 
+.statusWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.online {
+  background: #22c55e;
+}
+
+.offline {
+  background: #cbd5e1;
+}
+
+.statusText {
+  font-size: 14px;
+  color: #4b5563;
+}
+
 .me {
   align-self: flex-end;
   background: #e0e7ff;
   color: #304ffe;
   padding: 10px 14px;
   border-radius: 12px 12px 4px 12px;
-  max-width: 60%;
-  box-shadow: 0 1px 4px rgba(48,79,254,.09);
+  max-width: min(75%, 520px);
+  box-shadow: 0 1px 4px rgba(48, 79, 254, 0.09);
+  overflow-wrap: anywhere;
 }
 
 .them {
@@ -132,6 +245,37 @@
   color: #2c3e50;
   padding: 10px 14px;
   border-radius: 12px 12px 12px 4px;
-  max-width: 60%;
-  box-shadow: 0 1px 4px rgba(60,72,85,.09);
+  max-width: min(75%, 520px);
+  box-shadow: 0 1px 4px rgba(60, 72, 85, 0.09);
+  overflow-wrap: anywhere;
+}
+
+.messageText {
+  font-weight: 600;
+}
+
+.messageTime {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .adminLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .composeGrid,
+  .composeGridAdmin {
+    grid-template-columns: 1fr;
+  }
+
+  .sendBtn {
+    width: 100%;
+  }
 }
