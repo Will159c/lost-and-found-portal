@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { AuthContext } from "../../context/AuthContext.jsx";
+import { getSocketURL } from "../../api/axios.js";
 import {
   sendMessage,
   getMessages,
@@ -8,7 +10,39 @@ import {
 } from "../../api/messages.js";
 import styles from "./messages.module.css";
 
+function normalizeEmail(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function appendUnique(messages, nextMessage) {
+  if (!nextMessage) return messages;
+
+  const exists = messages.some((message) => {
+    if (!message._id || !nextMessage._id) return false;
+    return String(message._id) === String(nextMessage._id);
+  });
+
+  return exists ? messages : [...messages, nextMessage];
+}
+
+function isConversationMessage(message, myEmail, otherEmail) {
+  if (!message) return false;
+
+  const from = normalizeEmail(message.from);
+  const to = normalizeEmail(message.to);
+  const me = normalizeEmail(myEmail);
+  const other = normalizeEmail(otherEmail);
+
+  return (
+    (from === me && to === other) ||
+    (from === other && to === me)
+  );
+}
+
 export default function Messages() {
+  const { user } = useContext(AuthContext);
+  const myEmail = normalizeEmail(user?.email);
+
   const [messages, setMessages] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [composeTo, setComposeTo] = useState("");
@@ -18,14 +52,20 @@ export default function Messages() {
   const [error, setError] = useState("");
   const socketRef = useRef(null);
 
-  async function loadContacts() {
+  const loadContacts = useCallback(async () => {
     try {
       const res = await getContacts();
-      const list = (res.data || []).filter((c) => c.isAdmin !== false);
+      const list = (res.data || []).filter((contact) => contact.isAdmin);
       setContacts(list);
 
       setComposeTo((prev) => {
-        if (prev && list.some((c) => c.email === prev)) return prev;
+        if (
+          prev &&
+          list.some((contact) => normalizeEmail(contact.email) === normalizeEmail(prev))
+        ) {
+          return prev;
+        }
+
         return list[0]?.email || "";
       });
     } catch {
@@ -33,15 +73,17 @@ export default function Messages() {
     } finally {
       setLoadingContacts(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     setLoadingContacts(true);
     setError("");
     loadContacts();
-  }, []);
+  }, [loadContacts]);
 
   useEffect(() => {
+    if (!myEmail) return;
+
     pingPresence().catch(() => {});
     const id = setInterval(() => {
       pingPresence().catch(() => {});
@@ -49,36 +91,19 @@ export default function Messages() {
     }, 30000);
 
     return () => clearInterval(id);
-  }, []);
+  }, [loadContacts, myEmail]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    let myEmail = "";
-
-    try {
-      myEmail = storedUser ? JSON.parse(storedUser)?.email : "";
-    } catch {
-      myEmail = "";
-    }
-
     if (!myEmail) return;
 
-    socketRef.current = io("http://localhost:5050");
+    socketRef.current = io(getSocketURL());
     socketRef.current.emit("join", myEmail);
 
     socketRef.current.on("newMessage", (msg) => {
       setMessages((prev) => {
-        const exists = prev.some((m) => String(m._id) === String(msg._id));
-        if (exists) return prev;
-
-        if (
-          (msg.from === myEmail && msg.to === composeTo) ||
-          (msg.from === composeTo && msg.to === myEmail)
-        ) {
-          return [...prev, msg];
-        }
-
-        return prev;
+        return isConversationMessage(msg, myEmail, composeTo)
+          ? appendUnique(prev, msg)
+          : prev;
       });
 
       loadContacts();
@@ -87,7 +112,7 @@ export default function Messages() {
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [composeTo]);
+  }, [composeTo, loadContacts, myEmail]);
 
   useEffect(() => {
     if (!composeTo) {
@@ -111,14 +136,24 @@ export default function Messages() {
     setError("");
 
     try {
-      await sendMessage({ to: composeTo, text: composeText.trim() });
+      const res = await sendMessage({ to: composeTo, text: composeText.trim() });
+      const savedMessage = res.data;
+
+      setMessages((prev) => {
+        return isConversationMessage(savedMessage, myEmail, composeTo)
+          ? appendUnique(prev, savedMessage)
+          : prev;
+      });
+
       setComposeText("");
     } catch (err) {
       setError(err?.response?.data?.error || "Failed to send message.");
     }
   }
 
-  const selectedContact = contacts.find((c) => c.email === composeTo);
+  const selectedContact = contacts.find((contact) => {
+    return normalizeEmail(contact.email) === normalizeEmail(composeTo);
+  });
 
   return (
     <div className={styles.outerWrap}>
@@ -142,7 +177,11 @@ export default function Messages() {
               messages.map((msg, i) => (
                 <div
                   key={msg._id || i}
-                  className={msg.from === composeTo ? styles.them : styles.me}
+                  className={
+                    normalizeEmail(msg.from) === normalizeEmail(composeTo)
+                      ? styles.them
+                      : styles.me
+                  }
                 >
                   <div className={styles.messageText}>{msg.text}</div>
                   <div className={styles.messageTime}>
@@ -171,8 +210,12 @@ export default function Messages() {
                   contacts.map((contact) => (
                     <option key={contact.email} value={contact.email}>
                       {contact.firstName
-                        ? `${contact.firstName} (${contact.email})${contact.online ? " • Online" : " • Offline"}`
-                        : `${contact.email}${contact.online ? " • Online" : " • Offline"}`}
+                        ? `${contact.firstName} (${contact.email}) - ${
+                            contact.online ? "Online" : "Offline"
+                          }`
+                        : `${contact.email} - ${
+                            contact.online ? "Online" : "Offline"
+                          }`}
                     </option>
                   ))
                 )}
