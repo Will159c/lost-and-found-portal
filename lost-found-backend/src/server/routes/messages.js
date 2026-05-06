@@ -6,11 +6,23 @@ const router = express.Router();
 const COLLECTION = "messages";
 
 function normalizeEmail(value) {
-  return value?.trim().toLowerCase();
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function findUserByEmail(db, email) {
-  return db.collection("users").findOne({ email });
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  return db.collection("users").findOne({
+    email: {
+      $regex: `^${escapeRegex(normalizedEmail)}$`,
+      $options: "i",
+    },
+  });
 }
 
 function isOnline(lastSeen) {
@@ -18,13 +30,53 @@ function isOnline(lastSeen) {
   return Date.now() - new Date(lastSeen).getTime() < 60000;
 }
 
+function toContact(user, extra = {}) {
+  return {
+    ...extra,
+    email: normalizeEmail(user.email),
+    firstName: user.firstName,
+    isAdmin: user.isAdmin === true,
+    lastSeen: user.lastSeen,
+    online: isOnline(user.lastSeen),
+  };
+}
+
+function emitMessage(io, emails, payload) {
+  if (!io) return;
+
+  const rooms = [
+    ...new Set(
+      emails
+        .flatMap((email) => {
+          const rawEmail = typeof email === "string" ? email.trim() : "";
+          return [rawEmail, normalizeEmail(rawEmail)];
+        })
+        .filter(Boolean)
+    ),
+  ];
+
+  if (rooms.length === 0) return;
+
+  let target = io;
+  rooms.forEach((room) => {
+    target = target.to(room);
+  });
+
+  target.emit("newMessage", payload);
+}
+
 // Ping current user's presence
 router.post("/presence/ping", requireAuth, async (req, res) => {
   try {
     const db = await getDb();
+    const currentUser = await findUserByEmail(db, req.user.email);
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "Current user not found" });
+    }
 
     await db.collection("users").updateOne(
-      { email: req.user.email },
+      { _id: currentUser._id },
       { $set: { lastSeen: new Date() } }
     );
 
@@ -41,8 +93,14 @@ router.post("/presence/ping", requireAuth, async (req, res) => {
 router.get("/contacts", requireAuth, async (req, res) => {
   try {
     const db = await getDb();
-    const myEmail = req.user.email;
-    const meIsAdmin = !!req.user.isAdmin;
+    const currentUser = await findUserByEmail(db, req.user.email);
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "Current user not found" });
+    }
+
+    const myEmail = normalizeEmail(currentUser.email);
+    const meIsAdmin = currentUser.isAdmin === true;
 
     // Non-admin: only admins
     if (!meIsAdmin) {
@@ -63,12 +121,7 @@ router.get("/contacts", requireAuth, async (req, res) => {
         .sort({ firstName: 1, email: 1 })
         .toArray();
 
-      return res.json(
-        admins.map((admin) => ({
-          ...admin,
-          online: isOnline(admin.lastSeen),
-        }))
-      );
+      return res.json(admins.map((admin) => toContact(admin)));
     }
 
     // Admin: users who have a conversation with this admin
@@ -76,14 +129,20 @@ router.get("/contacts", requireAuth, async (req, res) => {
       .collection(COLLECTION)
       .aggregate([
         {
+          $addFields: {
+            fromEmail: { $toLower: "$from" },
+            toEmail: { $toLower: "$to" },
+          },
+        },
+        {
           $match: {
-            $or: [{ from: myEmail }, { to: myEmail }],
+            $or: [{ fromEmail: myEmail }, { toEmail: myEmail }],
           },
         },
         {
           $project: {
             otherEmail: {
-              $cond: [{ $eq: ["$from", myEmail] }, "$to", "$from"],
+              $cond: [{ $eq: ["$fromEmail", myEmail] }, "$toEmail", "$fromEmail"],
             },
             createdAt: 1,
           },
@@ -100,8 +159,19 @@ router.get("/contacts", requireAuth, async (req, res) => {
         {
           $lookup: {
             from: "users",
-            localField: "_id",
-            foreignField: "email",
+            let: { otherEmail: "$_id" },
+            pipeline: [
+              {
+                $addFields: {
+                  normalizedEmail: { $toLower: "$email" },
+                },
+              },
+              {
+                $match: {
+                  $expr: { $eq: ["$normalizedEmail", "$$otherEmail"] },
+                },
+              },
+            ],
             as: "user",
           },
         },
@@ -116,7 +186,7 @@ router.get("/contacts", requireAuth, async (req, res) => {
         {
           $project: {
             _id: 0,
-            email: "$user.email",
+            email: { $toLower: "$user.email" },
             firstName: "$user.firstName",
             isAdmin: "$user.isAdmin",
             lastSeen: "$user.lastSeen",
@@ -129,12 +199,9 @@ router.get("/contacts", requireAuth, async (req, res) => {
       ])
       .toArray();
 
-    return res.json(
-      threadUsers.map((user) => ({
-        ...user,
-        online: isOnline(user.lastSeen),
-      }))
-    );
+    return res.json(threadUsers.map((user) => toContact(user, {
+      latestCreatedAt: user.latestCreatedAt,
+    })));
   } catch (err) {
     res.status(500).json({
       error: "Failed to fetch contacts",
@@ -147,19 +214,26 @@ router.get("/contacts", requireAuth, async (req, res) => {
 router.get("/", requireAuth, async (req, res) => {
   try {
     const withUser = normalizeEmail(req.query.with);
-    const myEmail = req.user.email;
-    const meIsAdmin = !!req.user.isAdmin;
 
     if (!withUser) {
       return res.status(400).json({ error: "Missing 'with' query parameter" });
     }
 
     const db = await getDb();
+    const currentUser = await findUserByEmail(db, req.user.email);
     const otherUser = await findUserByEmail(db, withUser);
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "Current user not found" });
+    }
 
     if (!otherUser) {
       return res.status(404).json({ error: "Recipient not found" });
     }
+
+    const myEmail = normalizeEmail(currentUser.email);
+    const otherEmail = normalizeEmail(otherUser.email);
+    const meIsAdmin = currentUser.isAdmin === true;
 
     if (!meIsAdmin && !otherUser.isAdmin) {
       return res.status(403).json({
@@ -169,13 +243,31 @@ router.get("/", requireAuth, async (req, res) => {
 
     const messages = await db
       .collection(COLLECTION)
-      .find({
-        $or: [
-          { from: myEmail, to: withUser },
-          { from: withUser, to: myEmail },
-        ],
-      })
-      .sort({ createdAt: 1 })
+      .aggregate([
+        {
+          $addFields: {
+            fromEmail: { $toLower: "$from" },
+            toEmail: { $toLower: "$to" },
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { fromEmail: myEmail, toEmail: otherEmail },
+              { fromEmail: otherEmail, toEmail: myEmail },
+            ],
+          },
+        },
+        {
+          $sort: { createdAt: 1 },
+        },
+        {
+          $project: {
+            fromEmail: 0,
+            toEmail: 0,
+          },
+        },
+      ])
       .toArray();
 
     res.json(messages);
@@ -190,23 +282,30 @@ router.get("/", requireAuth, async (req, res) => {
 // Send message
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const to = normalizeEmail(req.body.to);
+    const requestedRecipient = normalizeEmail(req.body.to);
     const text = req.body.text?.trim();
-    const from = req.user.email;
-    const meIsAdmin = !!req.user.isAdmin;
 
-    if (!to || !text) {
+    if (!requestedRecipient || !text) {
       return res.status(400).json({
         error: "'to' and 'text' fields are required",
       });
     }
 
     const db = await getDb();
-    const recipient = await findUserByEmail(db, to);
+    const currentUser = await findUserByEmail(db, req.user.email);
+    const recipient = await findUserByEmail(db, requestedRecipient);
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "Current user not found" });
+    }
 
     if (!recipient) {
       return res.status(404).json({ error: "Recipient not found" });
     }
+
+    const from = normalizeEmail(currentUser.email);
+    const to = normalizeEmail(recipient.email);
+    const meIsAdmin = currentUser.isAdmin === true;
 
     if (!meIsAdmin && !recipient.isAdmin) {
       return res.status(403).json({
@@ -225,10 +324,7 @@ router.post("/", requireAuth, async (req, res) => {
     const savedDoc = { ...doc, _id: result.insertedId };
 
     const io = req.app.get("io");
-    if (io) {
-      io.to(to).emit("newMessage", savedDoc);
-      io.to(from).emit("newMessage", savedDoc);
-    }
+    emitMessage(io, [to, recipient.email, from, currentUser.email], savedDoc);
 
     res.json({ success: true, ...savedDoc });
   } catch (err) {

@@ -1,6 +1,7 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { AuthContext } from "../../context/AuthContext.jsx";
+import { getSocketURL } from "../../api/axios.js";
 import {
   sendMessage,
   getMessages,
@@ -9,8 +10,39 @@ import {
 } from "../../api/messages.js";
 import styles from "../messages/messages.module.css";
 
+function normalizeEmail(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function appendUnique(messages, nextMessage) {
+  if (!nextMessage) return messages;
+
+  const exists = messages.some((message) => {
+    if (!message._id || !nextMessage._id) return false;
+    return String(message._id) === String(nextMessage._id);
+  });
+
+  return exists ? messages : [...messages, nextMessage];
+}
+
+function isConversationMessage(message, myEmail, otherEmail) {
+  if (!message) return false;
+
+  const from = normalizeEmail(message.from);
+  const to = normalizeEmail(message.to);
+  const me = normalizeEmail(myEmail);
+  const other = normalizeEmail(otherEmail);
+
+  return (
+    (from === me && to === other) ||
+    (from === other && to === me)
+  );
+}
+
 export default function AdminMessages() {
   const { user } = useContext(AuthContext);
+  const myEmail = normalizeEmail(user?.email);
+  const isAdmin = user?.isAdmin === true;
 
   const [contacts, setContacts] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -21,14 +53,20 @@ export default function AdminMessages() {
   const [error, setError] = useState("");
   const socketRef = useRef(null);
 
-  async function loadContacts() {
+  const loadContacts = useCallback(async () => {
     try {
       const res = await getContacts();
-      const list = (res.data || []).filter((c) => !c.isAdmin);
+      const list = (res.data || []).filter((contact) => !contact.isAdmin);
       setContacts(list);
 
       setSelectedUser((prev) => {
-        if (prev && list.some((c) => c.email === prev)) return prev;
+        if (
+          prev &&
+          list.some((contact) => normalizeEmail(contact.email) === normalizeEmail(prev))
+        ) {
+          return prev;
+        }
+
         return list[0]?.email || "";
       });
     } catch {
@@ -36,16 +74,18 @@ export default function AdminMessages() {
     } finally {
       setLoadingContacts(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    if (!user?.isAdmin) return;
+    if (!isAdmin) return;
     setLoadingContacts(true);
     setError("");
     loadContacts();
-  }, [user]);
+  }, [isAdmin, loadContacts]);
 
   useEffect(() => {
+    if (!isAdmin || !myEmail) return;
+
     pingPresence().catch(() => {});
     const id = setInterval(() => {
       pingPresence().catch(() => {});
@@ -53,27 +93,19 @@ export default function AdminMessages() {
     }, 30000);
 
     return () => clearInterval(id);
-  }, []);
+  }, [isAdmin, loadContacts, myEmail]);
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!isAdmin || !myEmail) return;
 
-    socketRef.current = io("http://localhost:5050");
-    socketRef.current.emit("join", user.email);
+    socketRef.current = io(getSocketURL());
+    socketRef.current.emit("join", myEmail);
 
     socketRef.current.on("newMessage", (msg) => {
       setMessages((prev) => {
-        const exists = prev.some((m) => String(m._id) === String(msg._id));
-        if (exists) return prev;
-
-        if (
-          (msg.from === user.email && msg.to === selectedUser) ||
-          (msg.from === selectedUser && msg.to === user.email)
-        ) {
-          return [...prev, msg];
-        }
-
-        return prev;
+        return isConversationMessage(msg, myEmail, selectedUser)
+          ? appendUnique(prev, msg)
+          : prev;
       });
 
       loadContacts();
@@ -82,7 +114,7 @@ export default function AdminMessages() {
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [user, selectedUser]);
+  }, [isAdmin, loadContacts, myEmail, selectedUser]);
 
   useEffect(() => {
     if (!selectedUser) {
@@ -104,19 +136,29 @@ export default function AdminMessages() {
     if (!selectedUser || !composeText.trim()) return;
 
     try {
-      await sendMessage({
+      const res = await sendMessage({
         to: selectedUser,
         text: composeText.trim(),
       });
+      const savedMessage = res.data;
+
+      setMessages((prev) => {
+        return isConversationMessage(savedMessage, myEmail, selectedUser)
+          ? appendUnique(prev, savedMessage)
+          : prev;
+      });
+
       setComposeText("");
     } catch (err) {
       setError(err?.response?.data?.error || "Failed to send message.");
     }
   }
 
-  const activeContact = contacts.find((c) => c.email === selectedUser);
+  const activeContact = contacts.find((contact) => {
+    return normalizeEmail(contact.email) === normalizeEmail(selectedUser);
+  });
 
-  if (!user?.isAdmin) {
+  if (!isAdmin) {
     return (
       <div className={styles.outerWrap}>
         <div className={styles.layout}>
@@ -149,7 +191,9 @@ export default function AdminMessages() {
                 key={contact.email}
                 type="button"
                 className={`${styles.contactBtn} ${
-                  selectedUser === contact.email ? styles.contactBtnActive : ""
+                  normalizeEmail(selectedUser) === normalizeEmail(contact.email)
+                    ? styles.contactBtnActive
+                    : ""
                 }`}
                 onClick={() => setSelectedUser(contact.email)}
               >
@@ -188,7 +232,11 @@ export default function AdminMessages() {
               messages.map((msg, i) => (
                 <div
                   key={msg._id || i}
-                  className={msg.from === selectedUser ? styles.them : styles.me}
+                  className={
+                    normalizeEmail(msg.from) === normalizeEmail(selectedUser)
+                      ? styles.them
+                      : styles.me
+                  }
                 >
                   <div className={styles.messageText}>{msg.text}</div>
                   <div className={styles.messageTime}>

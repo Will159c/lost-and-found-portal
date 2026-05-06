@@ -19,8 +19,34 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5050;
+const configuredOrigins = (
+  process.env.CORS_ORIGIN ||
+  process.env.FRONTEND_URL ||
+  "http://localhost:5173,http://127.0.0.1:5173"
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors());
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (configuredOrigins.includes(origin)) return true;
+
+  try {
+    const url = new URL(origin);
+    return url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    callback(null, isAllowedOrigin(origin));
+  },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -54,7 +80,9 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin(origin, callback) {
+      callback(null, isAllowedOrigin(origin));
+    },
     methods: ["GET", "POST"],
   },
 });
@@ -66,8 +94,11 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   socket.on("join", (email) => {
-    if (!email) return;
-    socket.join(email);
+    const rawEmail = email?.trim();
+    if (!rawEmail) return;
+
+    socket.join(rawEmail);
+    socket.join(rawEmail.toLowerCase());
   });
 
   socket.on("disconnect", () => {
