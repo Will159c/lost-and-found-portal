@@ -22,11 +22,14 @@ export function requireAdmin(req, res, next) {
   // FIXED: Now properly checks if organization is falsy (null, undefined, empty string)
   if (
     !req.user ||
-    req.user.isAdmin !== true ||
+    req.user.isAdmin !== true 
+  ) {
+    return res.status(403).json({ message: "Access denied: Admins only" });
+  } else if (
     !req.user.organization ||
     req.user.organization === "null"
   ) {
-    return res.status(403).json({ message: "Access denied: Admins only" });
+    return res.status(403).json({ message: "Access denied: Apart of no organization"})
   }
   next();
 }
